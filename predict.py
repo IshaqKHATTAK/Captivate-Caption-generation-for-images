@@ -46,44 +46,51 @@ def encode(image):
     fea_vec = np.reshape(fea_vec, fea_vec.shape[1])
     return fea_vec
 
-# print("Encoding the image ...")
-# img_name = "static/input.jpg"
-# photo = encode(img_name)
+
 
 # Generate Captions for a random image in test dataset
 def beam_search_predictions(image, beam_index = 7):
+     # Initialize starting word index and probability for the beam search
     start = [word_to_index["startseq"]]
     start_word = [[start, 0.0]]
+    # Loop until the caption length reaches the maximum (38 in this case)
     while len(start_word[0][0]) < 38: #38 max_length of caption
+        # Create a temporary list to hold new possibilities for the beam search
         temp = []
+        # Loop through each possibility in the current beam
         for s in start_word:
+            # Pad the current possibility to match the required sequence length
             par_caps = pad_sequences([s[0]], maxlen=38, padding='post')
+            # Predict the next word probabilities using the model
             preds = model.predict([image.reshape((1,2048)),par_caps], verbose=0)
+            # Get the indices of the top predictions based on their probabilities
             word_preds = np.argsort(preds[0])[-beam_index:]
-            # Getting the top <beam_index>(n) predictions and creating a
-            # new list so as to put them via the model again
+            # Create new possibilities by appending each of the top predictions
+            # to the current sequence and updating the cumulative probability
             for w in word_preds:
                 next_cap, prob = s[0][:], s[1]
                 next_cap.append(w)
                 prob += preds[0][w]
                 temp.append([next_cap, prob])
-
+        #Update the current beam with the new possibilities
         start_word = temp
-        # Sorting according to the probabilities
+        # Sort the possibilities based on their probabilities
         start_word = sorted(start_word, reverse=False, key=lambda l: l[1])
-        # Getting the top words
+        # Keep only the top possibilities to maintain the beam width
         start_word = start_word[-beam_index:]
-
+    # Get the final sequence of word indices after beam search
     start_word = start_word[-1][0]
+    # Convert the word indices to actual words using the index_to_word dictionary
     intermediate_caption = [index_to_word[i] for i in start_word]
     final_caption = []
-
+    # Construct the final caption by excluding 'endseq' and joining the words
     for i in intermediate_caption:
         if i != 'endseq':
             final_caption.append(i)
         else:
             break
     final_caption = ' '.join(final_caption[1:])
+    # Return the final caption after beam search
     return final_caption
 
 

@@ -4,11 +4,6 @@ from predict import preprocess,encode,beam_search_predictions
 import os
 
 
-
-
-
-
-
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif'}  # Define allowed file extensions
@@ -33,29 +28,6 @@ def index():
             return render_template('index.html', prediction_text='Caption for the uploaded image: {}'.format(caption), image_url='uploads/input.jpg')
 
     return render_template('index.html')
-
-
-# img_name = "static/input.jpg"
-# @app.route('/predict',methods=['POST'])
-# def predict():
-#     photo = encode(img_name)
-#     caption = beam_search_predictions(photo)
-#     return render_template('index.html', prediction_text='caption for the above image {}'.format(caption))
-
-
-# @app.route("/")
-# def Home():
-#     return render_template('index.html')
-
-
-
-# @app.route("/about owner")
-# def about():
-#     return "<p>about page</p>"
-
-# @app.route("/resource")
-# def resource():
-#     return "<p>resource page</p>"
 
 
 if __name__ == '__main__':
