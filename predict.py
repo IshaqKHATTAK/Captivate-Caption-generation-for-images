@@ -12,8 +12,7 @@ import keras.utils as image
 from keras.utils import pad_sequences
 from keras.applications.inception_v3 import preprocess_input
 from tensorflow.keras.models import load_model
-
-
+import pickle
 # Read the files word_to_idx.pkl and idx_to_word.pkl to get the mappings between word and index
 word_to_index = {}
 with open ("models/wordtoindx.pkl", 'rb') as file:
@@ -33,7 +32,6 @@ model = load_model('models/keras_image_captioning.h5', compile=False)
 print("Loading the inception...")
 inception_customized = load_model('models/inception.h5', compile=False)
 
-
 def preprocess(image_path):
     img = image.load_img(image_path, target_size=(299, 299))
     x = image.img_to_array(img)
@@ -48,9 +46,9 @@ def encode(image):
     fea_vec = np.reshape(fea_vec, fea_vec.shape[1])
     return fea_vec
 
-print("Encoding the image ...")
-img_name = "static/input.jpg"
-photo = encode(img_name)
+# print("Encoding the image ...")
+# img_name = "static/input.jpg"
+# photo = encode(img_name)
 
 # Generate Captions for a random image in test dataset
 def beam_search_predictions(image, beam_index = 7):
@@ -60,8 +58,6 @@ def beam_search_predictions(image, beam_index = 7):
         temp = []
         for s in start_word:
             par_caps = pad_sequences([s[0]], maxlen=38, padding='post')
-            print('percpas',par_caps.shape)
-            print('image',image.reshape((1,2048)).shape)
             preds = model.predict([image.reshape((1,2048)),par_caps], verbose=0)
             word_preds = np.argsort(preds[0])[-beam_index:]
             # Getting the top <beam_index>(n) predictions and creating a
@@ -92,8 +88,8 @@ def beam_search_predictions(image, beam_index = 7):
 
 
 
-print("Running model to generate the caption...")
-caption = beam_search_predictions(photo)
+# print("Running model to generate the caption...")
+# caption = beam_search_predictions(photo)
 
 # img_data = plt.imread(img_name)
 # plt.imshow(img_data)

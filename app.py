@@ -1,84 +1,62 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from predict import preprocess,encode,beam_search_predictions
 
-
-# print("Encoding the image ...")
-# img_name = "static/input.jpg"
-# photo = encode(img_name)
-# app = Flask(__name__)
+import os
 
 
-# print("Running model to generate the caption...")
-# caption = beam_search_predictions(photo)
 
 
-@app.route("/")
-def Home():
+
+
+
+app = Flask(__name__)
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'jpg', 'jpeg', 'png', 'gif'}  # Define allowed file extensions
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'POST':
+        if 'imagefile' not in request.files:
+            return 'No file part'
+        file = request.files['imagefile']
+        if file.filename == '':
+            return 'No selected file'
+        if file and allowed_file(file.filename):
+            filename = os.path.join(app.config['UPLOAD_FOLDER'], 'input.jpg')
+            file.save(filename)
+            photo = encode(filename)
+            caption = beam_search_predictions(photo)
+            print(caption)
+            return render_template('index.html', prediction_text='Caption for the uploaded image: {}'.format(caption), image_url='uploads/input.jpg')
+
     return render_template('index.html')
 
-@app.route('/predict',methods=['POST'])
-def predict():
 
-    int_features = [float(x) for x in request.form.values()] #Convert string inputs to float.
-    features = [np.array(int_features)]  #Convert to the form [[a, b]] for input to the model
-    prediction = model.predict(features)  # features Must be in the form [[a, b]]
+# img_name = "static/input.jpg"
+# @app.route('/predict',methods=['POST'])
+# def predict():
+#     photo = encode(img_name)
+#     caption = beam_search_predictions(photo)
+#     return render_template('index.html', prediction_text='caption for the above image {}'.format(caption))
 
-    output = round(prediction[0], 2)
 
-    return render_template('index.html', prediction_text='Percent with heart disease is {}'.format(output))
+# @app.route("/")
+# def Home():
+#     return render_template('index.html')
 
-@app.route("/about owner")
-def about():
-    return "<p>about page</p>"
 
-@app.route("/resource")
-def resource():
-    return "<p>resource page</p>"
+
+# @app.route("/about owner")
+# def about():
+#     return "<p>about page</p>"
+
+# @app.route("/resource")
+# def resource():
+#     return "<p>resource page</p>"
 
 
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-
-# from flask import Flask, render_template, request
-
-# from keras.preprocessing.image import load_img
-# from keras.preprocessing.image import img_to_array
-# from keras.applications.vgg16 import preprocess_input
-# from keras.applications.vgg16 import decode_predictions
-# #from keras.applications.vgg16 import VGG16
-# from keras.applications.resnet50 import ResNet50
-
-# app = Flask(__name__)
-# model = ResNet50()
-
-# @app.route('/', methods=['GET'])
-# def hello_word():
-#     return render_template('index.html')
-
-# @app.route('/', methods=['POST'])
-# def predict():
-#     imagefile= request.files['imagefile']
-#     image_path = "./images/" + imagefile.filename
-#     imagefile.save(image_path)
-
-#     image = load_img(image_path, target_size=(224, 224))
-#     image = img_to_array(image)
-#     image = image.reshape((1, image.shape[0], image.shape[1], image.shape[2]))
-#     image = preprocess_input(image)
-#     yhat = model.predict(image)
-#     label = decode_predictions(yhat)
-#     label = label[0][0]
-
-#     classification = '%s (%.2f%%)' % (label[1], label[2]*100)
-
-
-#     return render_template('index.html', prediction=classification)
-
-
-# if __name__ == '__main__':
-#     app.run(port=3000, debug=True)
