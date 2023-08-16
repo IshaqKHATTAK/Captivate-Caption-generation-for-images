@@ -26,14 +26,13 @@ with open ("models/indxtoword.pkl", 'rb') as file:
 
 #Load the trained model. (Pickle file)
 print("Loading the model...")
-model = load_model('models/keras_image_captioning.h5')
+model = load_model('models/keras_image_captioning.h5', compile=False)
 
 
 #now load the inception v3 model with no last tow layers for feature extraction
-print("Loading Inception model...")
-save_path = 'models/inception.pkl'
-with open(save_path, 'rb') as file:
-    inception_customized = pickle.load(file)
+print("Loading the inception...")
+inception_customized = load_model('models/inception.h5', compile=False)
+
 
 def preprocess(image_path):
     img = image.load_img(image_path, target_size=(299, 299))
@@ -50,7 +49,7 @@ def encode(image):
     return fea_vec
 
 print("Encoding the image ...")
-img_name = "input.jpg"
+img_name = "static/input.jpg"
 photo = encode(img_name)
 
 # Generate Captions for a random image in test dataset
@@ -61,7 +60,9 @@ def beam_search_predictions(image, beam_index = 7):
         temp = []
         for s in start_word:
             par_caps = pad_sequences([s[0]], maxlen=38, padding='post')
-            preds = model.predict([image,par_caps], verbose=0)
+            print('percpas',par_caps.shape)
+            print('image',image.reshape((1,2048)).shape)
+            preds = model.predict([image.reshape((1,2048)),par_caps], verbose=0)
             word_preds = np.argsort(preds[0])[-beam_index:]
             # Getting the top <beam_index>(n) predictions and creating a
             # new list so as to put them via the model again
@@ -94,9 +95,9 @@ def beam_search_predictions(image, beam_index = 7):
 print("Running model to generate the caption...")
 caption = beam_search_predictions(photo)
 
-img_data = plt.imread(img_name)
-plt.imshow(img_data)
-plt.axis("off")
+# img_data = plt.imread(img_name)
+# plt.imshow(img_data)
+# plt.axis("off")
 
-plt.show()
-print(caption)
+# plt.show()
+# print(caption)

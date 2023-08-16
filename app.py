@@ -1,11 +1,31 @@
 from flask import Flask, render_template
+from predict import preprocess,encode,beam_search_predictions
 
-app = Flask(__name__)
+
+# print("Encoding the image ...")
+# img_name = "static/input.jpg"
+# photo = encode(img_name)
+# app = Flask(__name__)
+
+
+# print("Running model to generate the caption...")
+# caption = beam_search_predictions(photo)
+
 
 @app.route("/")
 def Home():
-    return render_template('base.html')
+    return render_template('index.html')
 
+@app.route('/predict',methods=['POST'])
+def predict():
+
+    int_features = [float(x) for x in request.form.values()] #Convert string inputs to float.
+    features = [np.array(int_features)]  #Convert to the form [[a, b]] for input to the model
+    prediction = model.predict(features)  # features Must be in the form [[a, b]]
+
+    output = round(prediction[0], 2)
+
+    return render_template('index.html', prediction_text='Percent with heart disease is {}'.format(output))
 
 @app.route("/about owner")
 def about():
